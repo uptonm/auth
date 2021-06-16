@@ -1,0 +1,7 @@
+host: localhost
+port: 8080
+auth0:
+  client_id: <auth0_client_id>
+  client_secret: <auth0_client_secret>
+  callback_url: <auth0_callback_url>
+  domain: <auth0_domain>
