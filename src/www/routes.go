@@ -13,10 +13,10 @@ import (
 )
 
 // wireRoutes handles the wiring of all packages
-func wireRoutes(r fiber.Router, resourceFs http.FileSystem, config *common.Config) {
+func wireRoutes(r fiber.Router, resourceFs http.FileSystem) {
 	apiGroup := r.Group("/api")
 	auth.RegisterAuthRoutes(r)
-	v1.RegisterV1(apiGroup, config)
+	v1.RegisterV1(apiGroup)
 
 	// Predefined route for favicon at root of domain
 	r.Use(favicon.New(favicon.Config{

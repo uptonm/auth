@@ -2,6 +2,7 @@ package common
 
 import (
 	"fmt"
+
 	"github.com/mitchellh/mapstructure"
 	"github.com/spf13/viper"
 )
@@ -11,9 +12,11 @@ type Env string
 var (
 	Dev  Env = "dev"
 	Prod Env = "prod"
+
+	Config AppConfig
 )
 
-type Config struct {
+type AppConfig struct {
 	Host              string `mapstructure:"HOST"`
 	Port              int    `mapstructure:"PORT"`
 	Env               Env    `mapstructure:"ENV"`
@@ -21,10 +24,13 @@ type Config struct {
 	Auth0ClientSecret string `mapstructure:"AUTH0_CLIENT_SECRET"`
 	Auth0CallbackUrl  string `mapstructure:"AUTH0_CALLBACK_URL"`
 	Auth0Domain       string `mapstructure:"AUTH0_DOMAIN"`
-	SigningKey        string `mapstructure:"SIGNING_KEY"`
+	RedisHost         string `mapstructure:"REDIS_HOST"`
+	RedisPort         string `mapstructure:"REDIS_PORT"`
+	RedisPass         string `mapstructure:"REDIS_PASS"`
 }
 
-func (c Config) Validate() error {
+// Validate accepts a receiver of AppConfig and validates that it includes all required variables
+func (c AppConfig) Validate() error {
 	if c.Auth0ClientId == "" || c.Auth0ClientSecret == "" || c.Auth0CallbackUrl == "" || c.Auth0Domain == "" {
 		return fmt.Errorf("failed to validate config error=auth0 config invalid")
 	}
@@ -32,18 +38,16 @@ func (c Config) Validate() error {
 	return nil
 }
 
-// ReadConfig utilizes viper to read a common yml file and returns a *Config if its initialized properly
-func ReadConfig() (*Config, error) {
-	var config Config
-
+// ReadConfig utilizes viper to read a common yml file and returns a *AppConfig if its initialized properly
+func ReadConfig() error {
 	viper.AutomaticEnv()
 	envKeysMap := &map[string]interface{}{}
-	if err := mapstructure.Decode(config, &envKeysMap); err != nil {
-		return nil, err
+	if err := mapstructure.Decode(Config, &envKeysMap); err != nil {
+		return err
 	}
 	for k := range *envKeysMap {
 		if err := viper.BindEnv(k); err != nil {
-			return nil, err
+			return err
 		}
 	}
 
@@ -51,20 +55,20 @@ func ReadConfig() (*Config, error) {
 	viper.SetDefault("port", 8080)
 	viper.SetDefault("env", "dev")
 
-	err := viper.Unmarshal(&config)
+	err := viper.Unmarshal(&Config)
 	if err != nil {
-		return nil, fmt.Errorf("failed to initialize auth0 config")
+		return fmt.Errorf("failed to initialize auth0 config")
 	}
 
-	err = config.Validate()
+	err = Config.Validate()
 	if err != nil {
-		return nil, err
+		return err
 	}
 
-	return &config, nil
+	return nil
 }
 
-// IsProd is a helper method accepting *Config as a receiver and resulting in true if within a production environment
-func (c *Config) IsProd() bool {
-	return c.Env == Prod
+// IsProd is a helper method accepting *AppConfig as a receiver and resulting in true if within a production environment
+func IsProd() bool {
+	return Config.Env == Prod
 }

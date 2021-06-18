@@ -21,12 +21,12 @@ var (
 )
 
 // Start handles all initialization of the go-fiber webserver
-func Start(config *common.Config, templateFs, resourceFs http.FileSystem) {
+func Start(templateFs, resourceFs http.FileSystem) {
 	// populate template engine from templates filesystem
 	engine = html.NewFileSystem(templateFs, ".html")
 
 	// enable template engine reloading on dev
-	engine.Reload(!config.IsProd())
+	engine.Reload(!common.IsProd())
 
 	r := fiber.New(fiber.Config{
 		DisableStartupMessage: true,
@@ -34,7 +34,7 @@ func Start(config *common.Config, templateFs, resourceFs http.FileSystem) {
 	})
 
 	goth.UseProviders(
-		auth0.New(config.Auth0ClientId, config.Auth0ClientSecret, config.Auth0CallbackUrl, config.Auth0Domain),
+		auth0.New(common.Config.Auth0ClientId, common.Config.Auth0ClientSecret, common.Config.Auth0CallbackUrl, common.Config.Auth0Domain),
 	)
 
 	r.Get("/", func(c *fiber.Ctx) error {
@@ -45,7 +45,7 @@ func Start(config *common.Config, templateFs, resourceFs http.FileSystem) {
 	})
 
 	wireMiddleware(r)
-	wireRoutes(r, resourceFs, config)
+	wireRoutes(r, resourceFs)
 
 	// graceful shutdown with SIGINT | SIGTERM and others will hard kill
 	// credit for this lovely method https://github.com/dechristopher/dchr.host
@@ -57,8 +57,8 @@ func Start(config *common.Config, templateFs, resourceFs http.FileSystem) {
 	}()
 
 	// listen for connections on primary listening port
-	log.Infof("uptonm.io listening on %s:%d", config.Host, config.Port)
-	if err := r.Listen(fmt.Sprintf("%s:%d", config.Host, config.Port)); err != nil {
+	log.Infof("uptonm.io listening on %s:%d", common.Config.Host, common.Config.Port)
+	if err := r.Listen(fmt.Sprintf("%s:%d", common.Config.Host, common.Config.Port)); err != nil {
 		log.Error(err.Error())
 	}
 

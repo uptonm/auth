@@ -11,7 +11,7 @@ import (
 )
 
 // StrictFs is a Custom strict filesystem implementation to
-// prevent directory listings for resources
+// prevent directory listings for resources.
 type StrictFs struct {
 	Fs http.FileSystem
 }
@@ -49,7 +49,7 @@ func (sfs StrictFs) Open(path string) (http.File, error) {
 }
 
 // PickFS returns either an embedded FS or an on-disk FS for the
-// given directory path
+// given directory path.
 func PickFS(useDisk bool, e embed.FS, dir string) http.FileSystem {
 	if useDisk {
 		return http.Dir(dir)
